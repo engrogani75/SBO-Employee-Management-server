@@ -35,6 +35,7 @@ async function run() {
 
     const userCollection = client.db("sboEmployeeManagement").collection("users");
     const paymentCollection = client.db("sboEmployeeManagement").collection("payment");
+    const workCollection = client.db("sboEmployeeManagement").collection("newWorkEntries");
 
 
     // all user collect for HR sent to clinet employeee list
@@ -45,7 +46,12 @@ async function run() {
       });
 
 
-      // payment collect colect from database
+        // payment collect colect from database
+
+        app.get('/payments', async (req, res) => {
+          const result = await paymentCollection.find().sort({ Month: 1 }).toArray();
+          res.send(result);
+        });
 
 
       app.get('/payments/:email', async (req, res) => {
@@ -119,6 +125,15 @@ async function run() {
         const payment = req.body;
         const paymentResult = await paymentCollection.insertOne(payment);
         res.send(paymentResult)
+      })
+
+
+       // work-sheet save
+
+       app.post('/work-sheet', async (req, res) => {
+        const newWorks = req.body;
+        const newWorksResult = await workCollection.insertOne(newWorks );
+        res.send(newWorksResult)
       })
   
        
