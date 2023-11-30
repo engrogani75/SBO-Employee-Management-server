@@ -46,6 +46,13 @@ async function run() {
       });
 
 
+      app.get('/users/:email', async (req, res) => {
+        const query = { email: req.params.email }
+        const result = await userCollection.find(query).toArray();
+        res.send(result);
+      })
+
+
         // payment collect colect from database
 
         app.get('/payments', async (req, res) => {
@@ -59,6 +66,9 @@ async function run() {
         const result = await paymentCollection.find(query).toArray();
         res.send(result);
       })
+
+
+      
 
 
 
@@ -126,6 +136,15 @@ async function run() {
         const paymentResult = await paymentCollection.insertOne(payment);
         res.send(paymentResult)
       })
+
+
+      // get worksheet from database
+
+
+      app.get('/work-sheet', async (req, res) => {
+        const result = await workCollection.find().toArray();
+        res.send(result);
+      });
 
 
        // work-sheet save
