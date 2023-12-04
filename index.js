@@ -6,8 +6,22 @@ require('dotenv').config()
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
-app.use(cors())
+// app.use(cors())
+
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://resilient-cranachan-6846d9.netlify.app',
+  
+  ],
+  credentials: true
+}));
+
+
 app.use(express.json());
+
+
+
 
 
 
@@ -31,11 +45,12 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const userCollection = client.db("sboEmployeeManagement").collection("users");
     const paymentCollection = client.db("sboEmployeeManagement").collection("payment");
     const workCollection = client.db("sboEmployeeManagement").collection("newWorkEntries");
+    const messageCollection = client.db("sboEmployeeManagement").collection("userMessage");
 
 
     // all user collect for HR sent to clinet employeee list
@@ -47,7 +62,7 @@ async function run() {
 
 
       app.get('/users/:email', async (req, res) => {
-        const query = { email: req.params.email }
+        const query = { email: req?.params?.email }
         const result = await userCollection.find(query).toArray();
         res.send(result);
       })
@@ -95,10 +110,38 @@ async function run() {
         const id = req.params.id;
         const filter = {_id: new ObjectId(id)}
         const verified = req.body;
-        console.log(verified);
+        // console.log(verified);
         const updateDoc = {
           $set: {
             isVerfied: verified.isVerfied
+          }
+        }
+      
+        const result = await userCollection.updateOne(filter, updateDoc)
+        res.send(result)
+       })
+
+
+       app.patch('/users/admin/:id', async(req,res) =>{
+        const id = req.params.id;
+        const filter = {_id: new ObjectId(id)}
+        const updateDoc = {
+          $set: {
+            status: 'Fired'
+          }
+        }
+      
+        const result = await userCollection.updateOne(filter, updateDoc)
+        res.send(result)
+       })
+
+
+       app.put('/users/mkhr/:id', async(req,res) =>{
+        const id = req.params.id;
+        const filter = {_id: new ObjectId(id)}
+        const updateDoc = {
+          $set: {
+            role: 'HR'
           }
         }
       
@@ -114,7 +157,7 @@ async function run() {
       app.post('/create-payment-intent', async (req, res) => {
         const { salary } = req.body;
         const amount = parseInt(salary * 100);
-        console.log(amount, 'amount inside the intent')
+        // console.log(amount, 'amount inside the intent')
   
         const paymentIntent = await stripe.paymentIntents.create({
           amount: amount,
@@ -154,12 +197,21 @@ async function run() {
         const newWorksResult = await workCollection.insertOne(newWorks );
         res.send(newWorksResult)
       })
+
+
+      //Contact us for save
+
+      app.post('/user-message', async (req, res) => {
+        const userMessage = req.body;
+        const result = await messageCollection.insertOne(userMessage);
+        res.send(result);
+      });
   
        
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
@@ -174,7 +226,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) =>{
-    res.send('Hotel is booking')
+    res.send('Employee mangement is setup')
 })
 
 app.listen(port, () => {
